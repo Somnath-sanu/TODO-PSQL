@@ -13,13 +13,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static("dist"));
+
 //get all todos
 
 app.get("/todos/:userEmail", async (req, res) => {
   const userEmail = req.params.userEmail;
   // console.log(userEmail);
   try {
-   
     const todos = await pool.query(
       "SELECT * FROM todos WHERE user_email = $1",
       [userEmail]
@@ -27,11 +28,10 @@ app.get("/todos/:userEmail", async (req, res) => {
 
     // console.log(todos)
     res.status(200).json(todos.rows);
-    
   } catch (error) {
     // console.log(error)
     res.json({ message: "Error getting Todos" });
-  } 
+  }
 });
 
 // create a new todo
@@ -41,7 +41,6 @@ app.post("/todos", async (req, res) => {
   const id = uuidv4();
   // console.log(user_email, title, progress, data)
   try {
-   
     const newTodo = await pool.query(
       "INSERT INTO todos(id, user_email, title, progress, data) VALUES($1, $2, $3, $4, $5)",
       [id, user_email, title, progress, data]
@@ -61,7 +60,6 @@ app.put("/todos/:id", async (req, res) => {
 
   // console.log(id)
   try {
-   
     const updateTodo = await pool.query(
       "UPDATE todos SET user_email = $1, title = $2, progress = $3, data = $4 WHERE id = $5;",
       [user_email, title, progress, data, id]
@@ -70,7 +68,7 @@ app.put("/todos/:id", async (req, res) => {
     res.status(200).json(updateTodo);
   } catch (error) {
     res.json({ message: "Error Updating Todo", error });
-  } 
+  }
 });
 
 //DELETE a todo
@@ -78,7 +76,6 @@ app.put("/todos/:id", async (req, res) => {
 app.delete("/todos/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    
     const deleteTodo = await pool.query("DELETE FROM todos WHERE id = $1;", [
       id,
     ]);
@@ -93,7 +90,6 @@ app.delete("/todos/:id", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-    
     const users = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
@@ -123,7 +119,6 @@ app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
   const hassedPassword = await bcrypt.hash(password, 10);
   try {
-    
     const signUp = await pool.query(
       "INSERT INTO users(email, hashed_password) VALUES($1, $2)",
       [email, hassedPassword]
@@ -134,13 +129,11 @@ app.post("/signup", async (req, res) => {
     const token = jwt.sign({ email }, "sanu110", { expiresIn: "1hr" });
 
     res.json({ email, token });
-
-    
   } catch (error) {
-    console.log(error)
+    console.log(error);
 
-    res.json({ error : error });
-  } 
+    res.json({ error: error });
+  }
 });
 
 app.listen(PORT, () => console.log(`Server is running on PORT ${PORT}`));
